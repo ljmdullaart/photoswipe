@@ -1,0 +1,135 @@
+#!/bin/bash
+#INSTALL@ /usr/local/bin/configyour.photoswipe
+THUMB=200x300
+FULL=1500x1200
+WD=`pwd`
+BASE=`basename $WD`
+HOST=pn
+DIR=.
+LOG=configyour.log
+echo "$0 starting">> configyour.log
+
+parsedir(){
+	DIR=$comment
+	if [ ! -d $DIR ] ; then
+		if [ -d /links/diaadm/$DIR ] ; then
+			DIR=/links/diaadm/$DIR
+		fi
+	fi
+}
+
+parseimage(){
+	# prefer jpg over xcf and xcf over raw
+	BODYIMAGE=${IMAGE%.*}
+	JPGIMAGE=$BODYIMAGE.JPG
+	if [ -f $DIR/$BODYIMAGE.JPG ] ; then
+		SRCIMAGE=$BODYIMAGE.JPG
+	elif [ -f $DIR/$BODYIMAGE.jpg ] ; then
+		SRCIMAGE=$BODYIMAGE.jpg
+		JPGIMAGE=$BODYIMAGE.jpg
+	elif [ -f $DIR/$BODYIMAGE.xcf ] ; then
+		SRCIMAGE=$BODYIMAGE.xcf
+	elif [ -f $DIR/$BODYIMAGE.XCF ] ; then
+		SRCIMAGE=$BODYIMAGE.XCF
+	elif [ -f $DIR/$BODYIMAGE.cr2 ] ; then
+		SRCIMAGE=$BODYIMAGE.cr2
+	elif [ -f $DIR/$BODYIMAGE.CR2 ] ; then
+		SRCIMAGE=$BODYIMAGE.CR2
+	else
+		echo ' ************************************'
+		echo "    $BODYIMAGE not found"
+		echo ' ************************************'
+	fi
+	echo "DIR=$DIR body=$BODYIMAGE; SRCIMAGE=$SRCIMAGE" >> $LOG
+
+}
+
+
+not_applicable(){
+	echo "Not applicable" >> $LOG
+	echo "tag/upload.photoswipe: |tag" >> Makefile
+	echo "	touch tag/upload.photoswipe" >> Makefile
+	echo "tag/photoswipe: |tag" >> Makefile
+	echo "	touch tag/photoswipe" >> Makefile
+	echo 'tag/clean.photoswipe:' >> Makefile
+	echo '	touch tag/clean.photoswipe' >> Makefile
+	exit 0
+}
+
+if [ ! -f /usr/local/share/photoswipe.tgz ] ; then
+
+	echo "********** ERROR **********/usr/local/share/photoswipe.tgz is missing" >> $LOG
+	exit 0
+fi
+
+
+# Check if applicable
+if [ ! -f imagelist ] ; then
+	echo "No imagelist" >> $LOG
+	not_applicable
+fi
+
+
+if grep -q 'PHOTOSWIPE' imagelist ; then
+	banner photoswipe >> Makefile
+elif grep -q 'SWIPEINDEX' imagelist ; then
+	banner photoswipe >> Makefile
+else
+	echo "No 'TYPE PHOTOSWIPE' or 'TYPE SWIPEINDEX' in imagelist" >> $LOG
+	not_applicable
+fi
+
+NOW=`date`
+mkdir -p www
+
+echo "tag/photoswipe: tag/photoswipe.images tag/photoswipe.scripts |tag" >> Makefile
+echo "	make_photoswipe" >> Makefile
+echo "	[ -d www ] && cp swipeindex.html www" >> Makefile
+echo "	[ -d www ] && cp swipeindex.html www/photoswipe.html" >> Makefile
+echo "	touch tag/photoswipe" >> Makefile
+
+echo "tag/photoswipe.scripts: www/code-photoswipe-jQuery-1.0.11.min.js  www/photoswipe.css  www/styles.css" >> Makefile
+echo "	touch tag/photoswipe.scripts" >> Makefile
+echo "www/code-photoswipe-jQuery-1.0.11.min.js: /usr/local/share/photoswipe.tgz" >> Makefile
+echo "	cd www; tar xvzf /usr/local/share/photoswipe.tgz" >> Makefile
+echo "www/photoswipe.css: /usr/local/share/photoswipe.tgz" >> Makefile
+echo "	cd www; tar xvzf /usr/local/share/photoswipe.tgz" >> Makefile
+echo "www/styles.css: /usr/local/share/photoswipe.tgz" >> Makefile
+echo "	cd www; tar xvzf /usr/local/share/photoswipe.tgz" >> Makefile
+
+echo -n "tag/photoswipe.images: " >> Makefile
+cat imagelist | while read IMAGE comment; do
+	case a$IMAGE in
+	(aDIR*) 
+		parsedir
+		;;
+	(aHOST*) echo -n '.'
+		;;
+	(aTYPE*) echo -n '.'
+		;;
+	(a\#*) echo -n '.'
+		;;
+	(a)
+		echo -n '.'
+		;;
+	(a*)	 
+		parseimage
+		echo -n " images/thumb/$JPGIMAGE images/fullsize/$JPGIMAGE" >> Makefile
+	esac
+done
+echo "" >> Makefile
+
+DIR=/links/diaadm/fullsize
+
+
+echo "tag/upload.photoswipe: tag/photoswipe destination |tag" >> Makefile
+echo '	find * > UPLOAD' >> Makefile
+echo "	upload_all" >> Makefile
+echo "	touch tag/upload.photoswipe" >> Makefile
+
+
+echo 'tag/clean.photoswipe:' >> Makefile
+echo "	sudo rm -fr photoswipe.html swipeindex.html images lib code-photoswipe-jQuery-1.0.11.min.js  photoswipe.css  styles.css" >> Makefile
+echo "	sudo rm -fr www/photoswipe.html www/swipeindex.html index.html" >> Makefile
+echo '	touch tag/clean.photoswipe' >> Makefile
+			
