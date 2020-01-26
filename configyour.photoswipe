@@ -36,9 +36,9 @@ parseimage(){
 	elif [ -f $DIR/$BODYIMAGE.CR2 ] ; then
 		SRCIMAGE=$BODYIMAGE.CR2
 	else
-		echo ' ************************************'
-		echo "    $BODYIMAGE not found"
-		echo ' ************************************'
+		echo ' ************************************' >>$LOG
+		echo "    $BODYIMAGE not found" >>$LOG
+		echo ' ************************************' >>$LOG
 	fi
 	echo "DIR=$DIR body=$BODYIMAGE; SRCIMAGE=$SRCIMAGE" >> $LOG
 
@@ -103,14 +103,14 @@ cat imagelist | while read IMAGE comment; do
 	(aDIR*) 
 		parsedir
 		;;
-	(aHOST*) echo -n '.'
+	(aHOST*) echo  'hostline' >>$LOG
 		;;
-	(aTYPE*) echo -n '.'
+	(aTYPE*) echo  'typeline' >>$LOG
 		;;
-	(a\#*) echo -n '.'
+	(a\#*) echo  "comment: $IMAGE" >>$LOG
 		;;
 	(a)
-		echo -n '.'
+		echo '.' >>$LOG
 		;;
 	(a*)	 
 		parseimage
