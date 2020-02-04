@@ -59,6 +59,7 @@ not_applicable(){
 if [ ! -f /usr/local/share/photoswipe.tgz ] ; then
 
 	echo "********** ERROR **********/usr/local/share/photoswipe.tgz is missing" >> $LOG
+	not_applicable
 	exit 0
 fi
 
