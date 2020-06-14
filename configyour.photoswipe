@@ -80,6 +80,8 @@ else
 	not_applicable
 fi
 
+indexhtml=$(sed -n 's/TYPE *//p' imagelist | head -1)
+
 NOW=`date`
 mkdir -p www
 
@@ -87,6 +89,11 @@ echo "tag/photoswipe: tag/photoswipe.images tag/photoswipe.scripts |tag" >> Make
 echo "	make_photoswipe" >> Makefile
 echo "	[ -d www ] && cp swipeindex.html www" >> Makefile
 echo "	[ -d www ] && cp swipeindex.html www/photoswipe.html" >> Makefile
+if [ "$indexhtml" =  'PHOTOSWIPE' ] ; then
+	echo "	[ -d www ] && cp swipeindex.html www/index.html" >> Makefile
+elif [ "$indexhtml" =  'SWIPEINDEX' ] ; then
+	echo "	[ -d www ] && cp swipeindex.html www/index.html" >> Makefile
+fi
 echo "	touch tag/photoswipe" >> Makefile
 
 echo "tag/photoswipe.scripts: www/code-photoswipe-jQuery-1.0.11.min.js  www/photoswipe.css  www/styles.css" >> Makefile
@@ -95,8 +102,13 @@ echo "www/code-photoswipe-jQuery-1.0.11.min.js: /usr/local/share/photoswipe.tgz"
 echo "	cd www; tar xvzf /usr/local/share/photoswipe.tgz" >> Makefile
 echo "www/photoswipe.css: /usr/local/share/photoswipe.tgz" >> Makefile
 echo "	cd www; tar xvzf /usr/local/share/photoswipe.tgz" >> Makefile
-echo "www/styles.css: /usr/local/share/photoswipe.tgz" >> Makefile
-echo "	cd www; tar xvzf /usr/local/share/photoswipe.tgz" >> Makefile
+if [ -f styles.css ] ; then
+	echo "www/styles.css: styles.css" >> Makefile
+	echo "	cp styles.css www" >> Makefile
+else
+	echo "www/styles.css: /usr/local/share/photoswipe.tgz" >> Makefile
+	echo "	cd www; tar xvzf /usr/local/share/photoswipe.tgz" >> Makefile
+fi
 
 echo -n "tag/photoswipe.images: " >> Makefile
 cat imagelist | while read IMAGE comment; do
