@@ -108,6 +108,7 @@ if [ -f styles.css ] ; then
 else
 	echo "www/styles.css: /usr/local/share/photoswipe.tgz" >> Makefile
 	echo "	cd www; tar xvzf /usr/local/share/photoswipe.tgz" >> Makefile
+	echo "	[ -f styles.css ] && cp styles.css www" >> Makefile
 fi
 
 echo -n "tag/photoswipe.images: " >> Makefile
@@ -142,7 +143,7 @@ echo "	touch tag/upload.photoswipe" >> Makefile
 
 
 echo 'tag/clean.photoswipe:' >> Makefile
-echo "	sudo rm -fr photoswipe.html swipeindex.html images lib code-photoswipe-jQuery-1.0.11.min.js  photoswipe.css  styles.css" >> Makefile
+echo "	sudo rm -fr photoswipe.html swipeindex.html images lib code-photoswipe-jQuery-1.0.11.min.js  photoswipe.css" >> Makefile
 echo "	sudo rm -fr www/photoswipe.html www/swipeindex.html index.html" >> Makefile
 echo '	touch tag/clean.photoswipe' >> Makefile
 			
